@@ -1,0 +1,13 @@
+{
+    "name": "Tesla Model S",
+    "description": "A luxury electric sedan from Tesla",
+    "image": "ipfs://bafybeichly7xz2kzyhs6qldr27g7jj433fvqy2o5hu4wwsnp4cosul2iem", 
+    "json": "https://gateway.pinata.cloud/ipfs/bafkreidwecmtni2j6i44l6nwburhzu3myojxruchobt5b5b2ezbxis4bhq",
+    "attributes": [
+      { "trait_type": "Make", "value": "Tesla" },
+      { "trait_type": "Model", "value": "Model S" },
+      { "trait_type": "Year", "value": "2023" },
+      { "trait_type": "Price", "value": "2.5 ETH" }
+    ]
+  }
+  
