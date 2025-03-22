@@ -6,14 +6,13 @@ import NFT_MARKETPLACE_ABI from '../abi/NFT.json';
 
 const NFT_MARKETPLACE_ADDRESS = "0x91926E1f55B16Bb2171BA9b3649603275934d282";
 
-// Hardcoded admin addresses for testing
+
 const ADMIN_ADDRESSES = [
-  "0x91926E1f55B16Bb2171BA9b3649603275934d282", // Contract address as admin
-  "0x742d35Cc6634C0532925a3b844Bc454e4438f44e", // Add your test wallet here
-  "0x123f681646d4a755815f9cb19e1acc8565a0c2ac"  // Add another test wallet
+  "0x91926E1f55B16Bb2171BA9b3649603275934d282", 
+  "0x742d35Cc6634C0532925a3b844Bc454e4438f44e", 
+  "0x123f681646d4a755815f9cb19e1acc8565a0c2ac" 
 ];
 
-// Ethereum provider initialization component
 const useEthereumProvider = () => {
   const [provider, setProvider] = useState(null);
   const [signer, setSigner] = useState(null);
@@ -23,20 +22,17 @@ const useEthereumProvider = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Enhanced checkAdmin function with hardcoded addresses
   const checkAdmin = async (contractInstance, accountAddress) => {
     if (!accountAddress) return false;
     
-    // First check if the address is in our hardcoded list (for testing/development)
     if (ADMIN_ADDRESSES.map(addr => addr.toLowerCase()).includes(accountAddress.toLowerCase())) {
       console.log("Admin found in hardcoded list");
       return true;
     }
     
-    // If not in hardcoded list, try the contract check
     if (contractInstance) {
       try {
-        const adminAddress = await contractInstance.owner(); // Using the owner() function from the contract
+        const adminAddress = await contractInstance.owner(); 
         const isContractAdmin = accountAddress.toLowerCase() === adminAddress.toLowerCase();
         console.log("Contract admin check:", isContractAdmin);
         return isContractAdmin;
@@ -50,17 +46,15 @@ const useEthereumProvider = () => {
     return false;
   };
 
-  // Initialize the provider, signer, and contract
   const initialize = async () => {
     setIsLoading(true);
     setError(null);
     
-    // Check if MetaMask is installed
+   
     if (window.ethereum) {
       try {
         console.log("Initializing with window.ethereum");
         
-        // Request account access
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         console.log("Connected accounts:", accounts);
         
@@ -68,33 +62,30 @@ const useEthereumProvider = () => {
           throw new Error("No accounts available");
         }
         
-        // Create ethers provider and signer - Fixed for ethers v6
         let ethersProvider;
         let ethersSigner;
         
-        // Check ethers version and use appropriate API
+
         if (ethers.version && ethers.version.startsWith('6')) {
-          // ethers v6 approach
+
           ethersProvider = new ethers.BrowserProvider(window.ethereum);
           ethersSigner = await ethersProvider.getSigner();
         } else {
-          // ethers v5 approach
+     
           ethersProvider = new ethers.providers.Web3Provider(window.ethereum);
           ethersSigner = ethersProvider.getSigner();
         }
         
         console.log("Provider created");
         
-        // Get the network details
+      
         const network = await ethersProvider.getNetwork();
         console.log("Connected to network:", network);
         
-        // Verify the address is valid
         if (!ethers.isAddress(NFT_MARKETPLACE_ADDRESS)) {
           throw new Error("Invalid contract address: " + NFT_MARKETPLACE_ADDRESS);
         }
         
-        // Create contract instance
         const marketplaceContract = new ethers.Contract(
           NFT_MARKETPLACE_ADDRESS,
           NFT_MARKETPLACE_ABI.abi,
@@ -103,8 +94,7 @@ const useEthereumProvider = () => {
         
         console.log("Contract created:", marketplaceContract.address);
         console.log("Available contract functions:", Object.keys(marketplaceContract.functions || {}));
-        
-        // Test if we can call a simple view function to verify connection
+   
         try {
           const owner = await marketplaceContract.owner();
           console.log("Contract owner:", owner);
@@ -117,12 +107,10 @@ const useEthereumProvider = () => {
         setContract(marketplaceContract);
         setAccount(accounts[0]);
         
-        // Check if the connected account is an admin
         const adminStatus = await checkAdmin(marketplaceContract, accounts[0]);
         console.log("Admin status:", adminStatus, "for account:", accounts[0]);
         setIsAdmin(adminStatus);
         
-        // Listen for account changes
         window.ethereum.on('accountsChanged', async (newAccounts) => {
           console.log("Accounts changed:", newAccounts);
           if (newAccounts.length > 0) {
@@ -131,7 +119,6 @@ const useEthereumProvider = () => {
             console.log("Admin status changed:", newAdminStatus, "for account:", newAccounts[0]);
             setIsAdmin(newAdminStatus);
           } else {
-            // Handle case where user disconnected all accounts
             setAccount('');
             setIsAdmin(false);
           }
@@ -150,7 +137,6 @@ const useEthereumProvider = () => {
     }
   };
   
-  // Connect wallet function
   const connectWallet = async () => {
     if (window.ethereum) {
       try {
@@ -158,7 +144,7 @@ const useEthereumProvider = () => {
         if (accounts.length > 0) {
           setAccount(accounts[0]);
           
-          // Check admin status when wallet is connected
+   
           if (contract) {
             const adminStatus = await checkAdmin(contract, accounts[0]);
             console.log("Admin status after connect:", adminStatus, "for account:", accounts[0]);
@@ -174,11 +160,9 @@ const useEthereumProvider = () => {
     }
   };
   
-  // Initialize on component mount
   useEffect(() => {
     initialize();
     
-    // Cleanup listener on component unmount
     return () => {
       if (window.ethereum) {
         window.ethereum.removeListener('accountsChanged', () => {});
@@ -200,12 +184,13 @@ const useEthereumProvider = () => {
   };
 };
 
+
 const CarNFTMarketplace = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [carNFTs, setCarNFTs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [featuredCars, setFeaturedCars] = useState([]);
   
-  // Admin mint form state
   const [showAdminForm, setShowAdminForm] = useState(false);
   const [formData, setFormData] = useState({
     toAddress: '',
@@ -220,7 +205,6 @@ const CarNFTMarketplace = () => {
   const [mintError, setMintError] = useState(null);
   const [mintLoading, setMintLoading] = useState(false);
 
-  // Use our custom hook for Ethereum provider
   const {
     provider,
     signer,
@@ -231,31 +215,10 @@ const CarNFTMarketplace = () => {
     connectWallet
   } = useEthereumProvider();
 
-  // Sample featured cars data (for testing)
-  const featuredCars = [
-    {
-      id: '1',
-      make: 'Lamborghini',
-      model: 'Aventador',
-      year: 2022,
-      image: Car,
-      price: '0.05',
-      owner: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
-      forSale: true
-    },
-    {
-      id: '2',
-      make: 'Ferrari',
-      model: 'LaFerrari',
-      year: 2021,
-      image: Car2,
-      price: '0.001',
-      owner: '0x123f681646d4a755815f9cb19e1acc8565a0c2ac',
-      forSale: true
-    }
-  ];
+  // Fallback images in case metadata doesn't have image URLs
+  const fallbackImages = [Car, Car2];
 
-  // Benefits of car NFTs
+
   const benefits = [
     { id: 1, title: "Verifiable ownership", description: "Each car NFT has blockchain-verified proof of ownership and authenticity, eliminating fraud and providing complete transparency of vehicle history." },
     { id: 2, title: "Exclusive collector benefits", description: "NFT car owners get access to exclusive events, private viewings, and special discounts on future releases within our ecosystem." },
@@ -263,60 +226,74 @@ const CarNFTMarketplace = () => {
     { id: 4, title: "Seamless transfers & sales", description: "Buy, sell, and transfer ownership instantly without paperwork. Smart contracts handle all the details securely and transparently." },
   ];
 
-  // Fetch car NFTs
-  const fetchCarNFTs = async (contractInstance) => {
-    try {
-      setIsLoading(true);
-      
-      // Using the sample data for now, you would replace this with actual contract calls
-      setTimeout(() => {
-        setCarNFTs(featuredCars);
-        setIsLoading(false);
-      }, 1000);
 
-      // Uncomment this section when ready to fetch from blockchain
-      /*
-      if (!contractInstance) return;
-      
-      const totalNFTs = await contractInstance.totalSupply();
-      const nftArray = [];
-      
-      for (let i = 0; i < totalNFTs; i++) {
-        const tokenId = await contractInstance.tokenByIndex(i);
-        const carData = await contractInstance.getCarNFTDetails(tokenId);
-        const owner = await contractInstance.ownerOf(tokenId);
-        const isForSale = await contractInstance.isForSale(tokenId);
-        const price = isForSale ? await contractInstance.getSalePrice(tokenId) : 0;
-        
-        nftArray.push({
-          id: tokenId.toString(),
-          make: carData.make,
-          model: carData.model,
-          year: carData.year,
-          image: carData.imageUrl,
-          price: ethers.formatEther(price),
-          owner: owner,
-          forSale: isForSale
-        });
-      }
-      
-      setCarNFTs(nftArray);
-      */
-    } catch (error) {
-      console.error("Error fetching car NFTs:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Load car NFTs when contract is available
   useEffect(() => {
-    if (contract) {
-      fetchCarNFTs(contract);
-    }
-  }, [contract]);
+    const fetchNFTs = async () => {
+      if (contract) {
+        try {
+          setIsLoading(true);
+          console.log("Fetching NFTs from contract...");
+          
+         
+          const nftIds = await contract.getAvailableNfts();
+          console.log("Available NFT IDs:", nftIds);
+          
+          const fetchedCars = await Promise.all(
+            nftIds.map(async (id, index) => {
+              try {
+                const car = await contract.getCarMetadata(id);
+                console.log(`Metadata for NFT ID ${id}:`, car);
+                
+                return {
+                  id: id.toString(),
+                  make: car.make || "Unknown Make",
+                  model: car.model || "Unknown Model",
+                  year: car.year ? car.year.toString() : "Unknown Year",
+                  image: car.imageUrl || fallbackImages[index % fallbackImages.length],
+                  price: car.price ? ethers.formatEther(car.price) : "0", 
+                  owner: car.owner || account,
+                  forSale: car.forSale || true,
+                  metadataURI: car.metadataURI || ""
+                };
+              } catch (e) {
+                console.error(`Error fetching metadata for NFT ID ${id}:`, e);
+                
+                return {
+                  id: id.toString(),
+                  make: "Error",
+                  model: "Failed to load",
+                  year: "Unknown",
+                  image: fallbackImages[index % fallbackImages.length],
+                  price: "0",
+                  owner: account,
+                  forSale: true,
+                  metadataURI: ""
+                };
+              }
+            })
+          );
+          
+          console.log("Fetched NFTs:", fetchedCars);
+          
+          setCarNFTs(fetchedCars);
+          
+          if (fetchedCars.length > 0) {
+            setFeaturedCars(fetchedCars.slice(0, Math.min(3, fetchedCars.length)));
+          }
+          
+          setIsLoading(false);
+        } catch (error) {
+          console.error("Error fetching NFTs:", error);
+          setIsLoading(false);
+          setCarNFTs([]);
+          setFeaturedCars([]);
+        }
+      }
+    };
+    
+    fetchNFTs();
+  }, [contract, account]);
   
-  // Function to extract token ID from event logs
   const getTokenIdFromLogs = (logs) => {
     if (!logs || !Array.isArray(logs)) {
       console.warn("Invalid logs provided to getTokenIdFromLogs", logs);
@@ -335,9 +312,8 @@ const CarNFTMarketplace = () => {
           const parsedLog = contract.interface.parseLog(log);
           console.log("Parsed log:", parsedLog);
           
-          // Check various event names and arg patterns that might contain the token ID
+          
           if (parsedLog.name === 'CarNFTMinted' || parsedLog.name === 'Transfer') {
-            // Try different argument names that might hold the token ID
             const possibleTokenIdArgs = ['tokenId', '_tokenId', 'id', '_id', 'tokenID'];
             for (const argName of possibleTokenIdArgs) {
               if (parsedLog.args && parsedLog.args[argName] !== undefined) {
@@ -345,14 +321,12 @@ const CarNFTMarketplace = () => {
               }
             }
             
-            // If Transfer event with standard ERC721 structure (to, from, tokenId)
             if (parsedLog.name === 'Transfer' && parsedLog.args && parsedLog.args[2]) {
               return parsedLog.args[2].toString();
             }
           }
         } catch (e) {
           console.warn("Error parsing log:", e);
-          // Continue to next log
         }
       }
     } catch (e) {
@@ -362,17 +336,14 @@ const CarNFTMarketplace = () => {
     return "Unknown";
   };
 
-  // Admin mint car NFT
   const adminMintNft = async (toAddress, make, model, year, price, metadataUrl) => {
     if (!contract) return;
     
     try {
       let priceValue;
       if (ethers.version && ethers.version.startsWith('6')) {
-        // ethers v6
         priceValue = ethers.parseEther(price.toString());
       } else {
-        // ethers v5
         priceValue = ethers.utils.parseEther(price.toString());
       }
       
@@ -393,53 +364,115 @@ const CarNFTMarketplace = () => {
     }
   };
 
-  // List car for sale
   const listCarForSale = async (tokenId, price) => {
     if (!contract) return;
     
     try {
       let priceValue;
       if (ethers.version && ethers.version.startsWith('6')) {
-        // ethers v6
+   
         priceValue = ethers.parseEther(price.toString());
       } else {
-        // ethers v5
+ 
         priceValue = ethers.utils.parseEther(price.toString());
       }
       
       const tx = await contract.setForSale(tokenId, priceValue);
       await tx.wait();
       console.log("Car NFT listed for sale successfully!");
-      fetchCarNFTs(contract);
+      
+      const fetchNFTs = async () => {
+        if (contract) {
+          try {
+            const nftIds = await contract.getAvailableNfts();
+            const fetchedCars = await Promise.all(
+              nftIds.map(async (id, index) => {
+                const car = await contract.getCarMetadata(id);
+                return {
+                  id: id.toString(),
+                  make: car.make || "Unknown Make",
+                  model: car.model || "Unknown Model",
+                  year: car.year ? car.year.toString() : "Unknown Year",
+                  image: car.imageUrl || fallbackImages[index % fallbackImages.length],
+                  price: car.price ? ethers.formatEther(car.price) : "0",
+                  owner: car.owner || account,
+                  forSale: car.forSale || true,
+                  metadataURI: car.metadataURI || ""
+                };
+              })
+            );
+            
+            setCarNFTs(fetchedCars);
+            
+            if (fetchedCars.length > 0) {
+              setFeaturedCars(fetchedCars.slice(0, Math.min(3, fetchedCars.length)));
+            }
+          } catch (err) {
+            console.error("Error refreshing NFTs: ", err);
+          }
+        }
+      };
+      
+      fetchNFTs();
     } catch (error) {
       console.error("Error listing car NFT for sale:", error);
     }
   };
 
-  // Buy car NFT
   const buyCarNft = async (tokenId, price) => {
     if (!contract) return;
     
     try {
       let priceValue;
       if (ethers.version && ethers.version.startsWith('6')) {
-        // ethers v6
         priceValue = ethers.parseEther(price.toString());
       } else {
-        // ethers v5
         priceValue = ethers.utils.parseEther(price.toString());
       }
       
       const tx = await contract.buyCarNft(tokenId, { value: priceValue });
       await tx.wait();
       console.log("Car NFT purchased successfully!");
-      fetchCarNFTs(contract);
+      
+   
+      const fetchNFTs = async () => {
+        if (contract) {
+          try {
+            const nftIds = await contract.getAvailableNfts();
+            const fetchedCars = await Promise.all(
+              nftIds.map(async (id, index) => {
+                const car = await contract.getCarMetadata(id);
+                return {
+                  id: id.toString(),
+                  make: car.make || "Unknown Make",
+                  model: car.model || "Unknown Model",
+                  year: car.year ? car.year.toString() : "Unknown Year",
+                  image: car.imageUrl || fallbackImages[index % fallbackImages.length],
+                  price: car.price ? ethers.formatEther(car.price) : "0",
+                  owner: car.owner || account,
+                  forSale: car.forSale || true,
+                  metadataURI: car.metadataURI || ""
+                };
+              })
+            );
+            
+            setCarNFTs(fetchedCars);
+            
+            if (fetchedCars.length > 0) {
+              setFeaturedCars(fetchedCars.slice(0, Math.min(3, fetchedCars.length)));
+            }
+          } catch (err) {
+            console.error("Error refreshing NFTs: ", err);
+          }
+        }
+      };
+      
+      fetchNFTs();
     } catch (error) {
       console.error("Error buying car NFT:", error);
     }
   };
 
-  // Admin mint form handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -483,14 +516,13 @@ const CarNFTMarketplace = () => {
                         "Please check your contract ABI and ensure you're connected to the right contract.");
       }
   
-      // ✅ Mint the NFT using the corrected function call
       const receipt = await adminMintNft(
         formData.toAddress,
         formData.make,
         formData.model,
         parseInt(formData.year),
-        formData.price,  // Still pass price here
-        ipfsUrl          // Then metadataUrl here — the adminMintNft function handles reordering
+        formData.price,  
+        ipfsUrl         
       );
   
       console.log("Transaction receipt:", receipt);
@@ -514,8 +546,7 @@ const CarNFTMarketplace = () => {
         txHash: txHash,
         metadataURI: ipfsUrl
       });
-  
-      // Reset form after mint
+
       setFormData({
         toAddress: '',
         make: '',
@@ -526,7 +557,41 @@ const CarNFTMarketplace = () => {
       });
       setImage(null);
   
-      fetchCarNFTs(contract);
+    
+      const fetchNFTs = async () => {
+        if (contract) {
+          try {
+            const nftIds = await contract.getAvailableNfts();
+            const fetchedCars = await Promise.all(
+              nftIds.map(async (id, index) => {
+                const car = await contract.getCarMetadata(id);
+                return {
+                  id: id.toString(),
+                  make: car.make || "Unknown Make",
+                  model: car.model || "Unknown Model",
+                  year: car.year ? car.year.toString() : "Unknown Year",
+                  image: car.imageUrl || fallbackImages[index % fallbackImages.length],
+                  price: car.price ? ethers.formatEther(car.price) : "0",
+                  owner: car.owner || account,
+                  forSale: car.forSale || true,
+                  metadataURI: car.metadataURI || ""
+                };
+              })
+            );
+            
+            setCarNFTs(fetchedCars);
+            
+            // Update featured cars
+            if (fetchedCars.length > 0) {
+              setFeaturedCars(fetchedCars.slice(0, Math.min(3, fetchedCars.length)));
+            }
+          } catch (err) {
+            console.error("Error refreshing NFTs: ", err);
+          }
+        }
+      };
+      
+      fetchNFTs();
     } catch (err) {
       console.error("Minting error:", err);
       setMintError(err.message || "Minting failed. Check console for details.");
@@ -535,26 +600,41 @@ const CarNFTMarketplace = () => {
     }
   };
   
-  // Slider functions
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % featuredCars.length);
+    setCurrentSlide((prev) => (prev + 1) % (featuredCars.length || 1));
   };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + featuredCars.length) % featuredCars.length);
+    setCurrentSlide((prev) => (prev - 1 + (featuredCars.length || 1)) % (featuredCars.length || 1));
   };
 
-  // Format address display
   const formatAddress = (address) => {
     if (!address) return "";
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
 
-  // Force admin toggle for testing (remove in production)
   const toggleAdminForTesting = () => {
     setIsAdmin(!isAdmin);
     console.log("Admin status manually toggled to:", !isAdmin);
   };
+
+  const getCurrentFeaturedCar = () => {
+    if (featuredCars.length === 0) {
+      return {
+        id: '0',
+        make: 'Loading...',
+        model: 'Please connect wallet',
+        year: new Date().getFullYear(),
+        image: Car,
+        price: '0',
+        owner: '0x0000000000000000000000000000000000000000',
+        forSale: false
+      };
+    }
+    return featuredCars[currentSlide];
+  };
+
+  const currentFeaturedCar = getCurrentFeaturedCar();
 
   return (
     <div className="min-h-screen bg-black">
@@ -627,73 +707,71 @@ const CarNFTMarketplace = () => {
             <form onSubmit={handleAdminMintSubmit} className="space-y-4">
               
             <div className="grid grid-cols-2 gap-4">
-              
               <div>
-              <label className="block mb-1">Address to Mint to:</label>
-                  <input
-                    type="text"
-                    name="toAddress"
-                    value={formData.toAddress}
-                    onChange={handleChange}
-                    className="w-full p-2 border rounded bg-gray-700 text-white"
-                    required
-                  />
+                <label className="block mb-1">Address to Mint to:</label>
+                <input
+                  type="text"
+                  name="toAddress"
+                  value={formData.toAddress}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded bg-gray-700 text-white"
+                  required
+                />
               </div>
-                <div>
-                  <label className="block mb-1">Address to Mint to:</label>
-                  <input
-                    type="text"
-                    name="make"
-                    value={formData.make}
-                    onChange={handleChange}
-                    className="w-full p-2 border rounded bg-gray-700 text-white"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block mb-1">Model:</label>
-                  <input
-                    type="text"
-                    name="model"
-                    value={formData.model}
-                    onChange={handleChange}
-                    className="w-full p-2 border rounded bg-gray-700 text-white"
-                    required
-                  />
-                </div>
+              <div>
+                <label className="block mb-1">Make:</label>
+                <input
+                  type="text"
+                  name="make"
+                  value={formData.make}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded bg-gray-700 text-white"
+                  required
+                />
               </div>
+            </div>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block mb-1">Year:</label>
-                  <input
-                    type="number"
-                    name="year"
-                    value={formData.year}
-                    onChange={handleChange}
-                    className="w-full p-2 border rounded bg-gray-700 text-white"
-                    min="1900"
-                    max="2100"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block mb-1">Price (ETH):</label>
-                  <input
-                    type="number"
-                    name="price"
-                    value={formData.price}
-                    onChange={handleChange}
-                    className="w-full p-2 border rounded bg-gray-700 text-white"
-                    min="0.001"
-                    step="0.001"
-                    required
-                  />
-                </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-1">Model:</label>
+                <input
+                  type="text"
+                  name="model"
+                  value={formData.model}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded bg-gray-700 text-white"
+                  required
+                />
               </div>
-              
+              <div>
+                <label className="block mb-1">Year:</label>
+                <input
+                  type="number"
+                  name="year"
+                  value={formData.year}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded bg-gray-700 text-white"
+                  min="1900"
+                  max="2100"
+                  required
+                />
+              </div>
+            </div>
+                
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-1">Price (ETH):</label>
+                <input
+                  type="number"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded bg-gray-700 text-white"
+                  min="0.001"
+                  step="0.001"
+                  required
+                />
+              </div>
               <div>
                 <label className="block mb-1">Description:</label>
                 <textarea
@@ -704,7 +782,6 @@ const CarNFTMarketplace = () => {
                   rows="3"
                 ></textarea>
               </div>
-              
               <div>
                 <label className="block mb-1">Car Image:</label>
                 <input
@@ -733,6 +810,7 @@ const CarNFTMarketplace = () => {
               >
                 {mintLoading ? 'Processing...' : 'Mint NFT'}
               </button>
+              </div>
             </form>
             
             {mintError && (
@@ -800,7 +878,7 @@ const CarNFTMarketplace = () => {
                   </div>
                   <button 
                     className="bg-orange-500 text-white px-6 py-2 rounded-md text-sm font-medium"
-                    onClick={() => buyCarNFT(featuredCars[currentSlide]?.id, featuredCars[currentSlide]?.price)}
+                    onClick={() => buyCarNft(featuredCars[currentSlide]?.id, featuredCars[currentSlide]?.price)}
                   >
                     BUY NOW
                   </button>
@@ -949,5 +1027,6 @@ const CarNFTMarketplace = () => {
     </div>
   );
 };
-
 export default CarNFTMarketplace;
+
+              

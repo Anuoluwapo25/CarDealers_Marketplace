@@ -1,9 +1,6 @@
 import React from "react";
-import Dealer from "./Components/Old";
-import AdminMintForm from "./Components/AminMintForm";
-import FeaturedCarSlider from "./Components/FeaturedCardSlider";
-import Header from "./Components/Header";
-import NFTCollection from "./Components/NftCollection";
+import Dealer from "./Components/New";
+
 
 
 function App() {
