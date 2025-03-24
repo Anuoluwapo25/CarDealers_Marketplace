@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import Car from '../assets/blackcar.jpg';
-import Car2 from '../assets/car.png'
+import Car2 from '../assets/car.png';
+import Car3 from '../assets/yellow.png';
+import Car4 from '../assets/red.png';
 import NFT_MARKETPLACE_ABI from '../abi/NFT.json';
 
 const NFT_MARKETPLACE_ADDRESS = "0x91926E1f55B16Bb2171BA9b3649603275934d282";
@@ -213,7 +215,7 @@ const CarNFTMarketplace = () => {
   } = useEthereumProvider();
 
   // Fallback images in case metadata doesn't have image URLs
-  const fallbackImages = [Car, Car2];
+  const fallbackImages = [Car, Car2, Car3, Car4];
 
 
   const benefits = [
