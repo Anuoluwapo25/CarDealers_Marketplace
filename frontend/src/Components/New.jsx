@@ -6,7 +6,6 @@ import NFT_MARKETPLACE_ABI from '../abi/NFT.json';
 
 const NFT_MARKETPLACE_ADDRESS = "0x91926E1f55B16Bb2171BA9b3649603275934d282";
 
-
 const ADMIN_ADDRESSES = [
   "0x91926E1f55B16Bb2171BA9b3649603275934d282", 
   "0x742d35Cc6634C0532925a3b844Bc454e4438f44e", 
@@ -67,18 +66,15 @@ const useEthereumProvider = () => {
         
 
         if (ethers.version && ethers.version.startsWith('6')) {
-
           ethersProvider = new ethers.BrowserProvider(window.ethereum);
           ethersSigner = await ethersProvider.getSigner();
         } else {
-     
           ethersProvider = new ethers.providers.Web3Provider(window.ethereum);
           ethersSigner = ethersProvider.getSigner();
         }
         
         console.log("Provider created");
         
-      
         const network = await ethersProvider.getNetwork();
         console.log("Connected to network:", network);
         
@@ -144,7 +140,6 @@ const useEthereumProvider = () => {
         if (accounts.length > 0) {
           setAccount(accounts[0]);
           
-   
           if (contract) {
             const adminStatus = await checkAdmin(contract, accounts[0]);
             console.log("Admin status after connect:", adminStatus, "for account:", accounts[0]);
@@ -204,6 +199,8 @@ const CarNFTMarketplace = () => {
   const [mintResult, setMintResult] = useState(null);
   const [mintError, setMintError] = useState(null);
   const [mintLoading, setMintLoading] = useState(false);
+  // Move notification state to main component
+  const [notification, setNotification] = useState(null);
 
   const {
     provider,
@@ -227,70 +224,69 @@ const CarNFTMarketplace = () => {
   ];
 
 
-  useEffect(() => {
-    const fetchNFTs = async () => {
-      if (contract) {
-        try {
-          setIsLoading(true);
-          console.log("Fetching NFTs from contract...");
-          
-         
-          const nftIds = await contract.getAvailableNfts();
-          console.log("Available NFT IDs:", nftIds);
-          
-          const fetchedCars = await Promise.all(
-            nftIds.map(async (id, index) => {
-              try {
-                const car = await contract.getCarMetadata(id);
-                console.log(`Metadata for NFT ID ${id}:`, car);
-                
-                return {
-                  id: id.toString(),
-                  make: car.make || "Unknown Make",
-                  model: car.model || "Unknown Model",
-                  year: car.year ? car.year.toString() : "Unknown Year",
-                  image: car.imageUrl || fallbackImages[index % fallbackImages.length],
-                  price: car.price ? ethers.formatEther(car.price) : "0", 
-                  owner: car.owner || account,
-                  forSale: car.forSale || true,
-                  metadataURI: car.metadataURI || ""
-                };
-              } catch (e) {
-                console.error(`Error fetching metadata for NFT ID ${id}:`, e);
-                
-                return {
-                  id: id.toString(),
-                  make: "Error",
-                  model: "Failed to load",
-                  year: "Unknown",
-                  image: fallbackImages[index % fallbackImages.length],
-                  price: "0",
-                  owner: account,
-                  forSale: true,
-                  metadataURI: ""
-                };
-              }
-            })
-          );
-          
-          console.log("Fetched NFTs:", fetchedCars);
-          
-          setCarNFTs(fetchedCars);
-          
-          if (fetchedCars.length > 0) {
-            setFeaturedCars(fetchedCars.slice(0, Math.min(3, fetchedCars.length)));
-          }
-          
-          setIsLoading(false);
-        } catch (error) {
-          console.error("Error fetching NFTs:", error);
-          setIsLoading(false);
-          setCarNFTs([]);
-          setFeaturedCars([]);
+  const fetchNFTs = async () => {
+    if (contract) {
+      try {
+        setIsLoading(true);
+        console.log("Fetching NFTs from contract...");
+        
+        const nftIds = await contract.getAvailableNfts();
+        console.log("Available NFT IDs:", nftIds);
+        
+        const fetchedCars = await Promise.all(
+          nftIds.map(async (id, index) => {
+            try {
+              const car = await contract.getCarMetadata(id);
+              console.log(`Metadata for NFT ID ${id}:`, car);
+              
+              return {
+                id: id.toString(),
+                make: car.make || "Unknown Make",
+                model: car.model || "Unknown Model",
+                year: car.year ? car.year.toString() : "Unknown Year",
+                image: car.imageUrl || fallbackImages[index % fallbackImages.length],
+                price: car.price ? ethers.formatEther(car.price) : "0", 
+                owner: car.owner || account,
+                forSale: car.forSale || true,
+                metadataURI: car.metadataURI || ""
+              };
+            } catch (e) {
+              console.error(`Error fetching metadata for NFT ID ${id}:`, e);
+              
+              return {
+                id: id.toString(),
+                make: "Error",
+                model: "Failed to load",
+                year: "Unknown",
+                image: fallbackImages[index % fallbackImages.length],
+                price: "0",
+                owner: account,
+                forSale: true,
+                metadataURI: ""
+              };
+            }
+          })
+        );
+        
+        console.log("Fetched NFTs:", fetchedCars);
+        
+        setCarNFTs(fetchedCars);
+        
+        if (fetchedCars.length > 0) {
+          setFeaturedCars(fetchedCars.slice(0, Math.min(3, fetchedCars.length)));
         }
+        
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching NFTs:", error);
+        setIsLoading(false);
+        setCarNFTs([]);
+        setFeaturedCars([]);
       }
-    };
-    
+    }
+  };
+
+  useEffect(() => {
     fetchNFTs();
   }, [contract, account]);
   
@@ -311,7 +307,6 @@ const CarNFTMarketplace = () => {
           
           const parsedLog = contract.interface.parseLog(log);
           console.log("Parsed log:", parsedLog);
-          
           
           if (parsedLog.name === 'CarNFTMinted' || parsedLog.name === 'Transfer') {
             const possibleTokenIdArgs = ['tokenId', '_tokenId', 'id', '_id', 'tokenID'];
@@ -419,10 +414,36 @@ const CarNFTMarketplace = () => {
     }
   };
 
+
   const buyCarNft = async (tokenId, price) => {
-    if (!contract) return;
+    if (!contract) {
+      setNotification({
+        type: 'error',
+        message: 'Contract not initialized. Please connect your wallet.'
+      });
+      setTimeout(() => {
+        setNotification(null);
+      }, 5000);
+      return;
+    }
+    
+    if (!account) {
+      setNotification({
+        type: 'error',
+        message: 'Please connect your wallet to purchase NFTs'
+      });
+      setTimeout(() => {
+        setNotification(null);
+      }, 5000);
+      return;
+    }
     
     try {
+      setNotification({
+        type: 'loading',
+        message: 'Processing your purchase...'
+      });
+      
       let priceValue;
       if (ethers.version && ethers.version.startsWith('6')) {
         priceValue = ethers.parseEther(price.toString());
@@ -430,46 +451,56 @@ const CarNFTMarketplace = () => {
         priceValue = ethers.utils.parseEther(price.toString());
       }
       
+      console.log(`Buying NFT #${tokenId} for ${price} ETH (${priceValue.toString()} wei)`);
+      
+      // Add some logs for debugging
+      console.log("Contract address:", contract.address);
+      console.log("Connected account:", account);
+      console.log("Available functions:", Object.keys(contract.functions || {}));
+      
       const tx = await contract.buyCarNft(tokenId, { value: priceValue });
-      await tx.wait();
-      console.log("Car NFT purchased successfully!");
+      console.log("Transaction sent:", tx.hash);
       
-   
-      const fetchNFTs = async () => {
-        if (contract) {
-          try {
-            const nftIds = await contract.getAvailableNfts();
-            const fetchedCars = await Promise.all(
-              nftIds.map(async (id, index) => {
-                const car = await contract.getCarMetadata(id);
-                return {
-                  id: id.toString(),
-                  make: car.make || "Unknown Make",
-                  model: car.model || "Unknown Model",
-                  year: car.year ? car.year.toString() : "Unknown Year",
-                  image: car.imageUrl || fallbackImages[index % fallbackImages.length],
-                  price: car.price ? ethers.formatEther(car.price) : "0",
-                  owner: car.owner || account,
-                  forSale: car.forSale || true,
-                  metadataURI: car.metadataURI || ""
-                };
-              })
-            );
-            
-            setCarNFTs(fetchedCars);
-            
-            if (fetchedCars.length > 0) {
-              setFeaturedCars(fetchedCars.slice(0, Math.min(3, fetchedCars.length)));
-            }
-          } catch (err) {
-            console.error("Error refreshing NFTs: ", err);
-          }
-        }
-      };
+      const receipt = await tx.wait();
+      console.log("Transaction confirmed:", receipt);
       
+      setNotification({
+        type: 'success',
+        message: `Successfully purchased NFT #${tokenId} for ${price} ETH`
+      });
+      
+      setTimeout(() => {
+        setNotification(null);
+      }, 5000);
+      
+      // Refresh NFTs after purchase
       fetchNFTs();
     } catch (error) {
       console.error("Error buying car NFT:", error);
+      
+      // Provide more detailed error message
+      let errorMessage = 'Failed to purchase NFT. Please try again.';
+      
+      if (error.reason) {
+        errorMessage = error.reason;
+      } else if (error.message) {
+        // Extract the relevant part of the error message (often buried in a long string)
+        const match = error.message.match(/reverted with reason string '([^']+)'/);
+        if (match && match[1]) {
+          errorMessage = match[1];
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setNotification({
+        type: 'error',
+        message: errorMessage
+      });
+      
+      setTimeout(() => {
+        setNotification(null);
+      }, 5000);
     }
   };
 
@@ -557,44 +588,29 @@ const CarNFTMarketplace = () => {
       });
       setImage(null);
   
-    
-      const fetchNFTs = async () => {
-        if (contract) {
-          try {
-            const nftIds = await contract.getAvailableNfts();
-            const fetchedCars = await Promise.all(
-              nftIds.map(async (id, index) => {
-                const car = await contract.getCarMetadata(id);
-                return {
-                  id: id.toString(),
-                  make: car.make || "Unknown Make",
-                  model: car.model || "Unknown Model",
-                  year: car.year ? car.year.toString() : "Unknown Year",
-                  image: car.imageUrl || fallbackImages[index % fallbackImages.length],
-                  price: car.price ? ethers.formatEther(car.price) : "0",
-                  owner: car.owner || account,
-                  forSale: car.forSale || true,
-                  metadataURI: car.metadataURI || ""
-                };
-              })
-            );
-            
-            setCarNFTs(fetchedCars);
-            
-            // Update featured cars
-            if (fetchedCars.length > 0) {
-              setFeaturedCars(fetchedCars.slice(0, Math.min(3, fetchedCars.length)));
-            }
-          } catch (err) {
-            console.error("Error refreshing NFTs: ", err);
-          }
-        }
-      };
+      // Show success notification
+      setNotification({
+        type: 'success',
+        message: `Successfully minted NFT #${tokenId}`
+      });
+      
+      setTimeout(() => {
+        setNotification(null);
+      }, 5000);
       
       fetchNFTs();
     } catch (err) {
       console.error("Minting error:", err);
       setMintError(err.message || "Minting failed. Check console for details.");
+      
+      setNotification({
+        type: 'error',
+        message: err.message || "Minting failed. Check console for details."
+      });
+      
+      setTimeout(() => {
+        setNotification(null);
+      }, 5000);
     } finally {
       setMintLoading(false);
     }
@@ -813,6 +829,8 @@ const CarNFTMarketplace = () => {
               </div>
             </form>
             
+            
+            
             {mintError && (
               <div className="mt-4 p-3 bg-red-900 border border-red-700 text-white rounded">
                 Error: {mintError}
@@ -939,7 +957,7 @@ const CarNFTMarketplace = () => {
       <div className="py-16 bg-gray-900">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-12">
-            <div className="md:w-1/3 mb-6 md:mb-0">
+            <div className="md:w-1/4 mb-6 md:mb-0">
               <div className="bg-orange-500 p-8 rounded-lg">
                 <h3 className="text-white text-3xl font-bold tracking-wider">NFT</h3>
               </div>
@@ -1021,9 +1039,45 @@ const CarNFTMarketplace = () => {
               VIEW ALL NFTs
             </button>
           </div>
+          
 
         </div>
       </div>
+      {notification && (
+  <div className={`fixed bottom-4 right-4 rounded-md shadow-lg p-4 max-w-md transition-all duration-300 ${
+    notification.type === 'success' ? 'bg-green-600' : 
+    notification.type === 'error' ? 'bg-red-600' : 
+    notification.type === 'loading' ? 'bg-blue-600' : 'bg-gray-800'
+  } text-white`}>
+    <div className="flex items-center">
+      {notification.type === 'success' && (
+        <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+      )}
+      {notification.type === 'error' && (
+        <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      )}
+      {notification.type === 'loading' && (
+        <svg className="w-6 h-6 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+      )}
+      <p>{notification.message}</p>
+    </div>
+    <button 
+      onClick={() => setNotification(null)} 
+      className="absolute top-2 right-2 text-white"
+    >
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+)}
+      
     </div>
   );
 };
