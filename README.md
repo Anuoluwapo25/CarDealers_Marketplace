@@ -2,7 +2,7 @@
 
 CARNFT is a blockchain-powered marketplace for exclusive car NFTs, allowing users to buy, sell, and collect digital assets representing luxury vehicles.
 
-![CARNFT Marketplace](.frontend/src/assets/car.png)
+![CARNFT Marketplace](./frontend/src/assets/car.png)
 
 
 ## Features
@@ -153,9 +153,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Contact
 
-Your Name - [@yourtwitter](https://twitter.com/yourtwitter)
+Your Name - [@ali_anuoluwapo](https://x.com/ali_anuoluwapo)
 
-Project Link: [https://github.com/yourusername/carnft-marketplace](https://github.com/yourusername/carnft-marketplace)
+Project Link: [https://carmarketplace-opal.vercel.app/](https://carmarketplace-opal.vercel.app/)
 
 ## Acknowledgments
 
