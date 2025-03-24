@@ -2,7 +2,7 @@
 
 CARNFT is a blockchain-powered marketplace for exclusive car NFTs, allowing users to buy, sell, and collect digital assets representing luxury vehicles.
 
-![CARNFT Marketplace](./frontend/src/assets/car.png)
+![CARNFT Marketplace](./frontend/src/assets/home.png)
 
 
 ## Features
@@ -17,32 +17,24 @@ CARNFT is a blockchain-powered marketplace for exclusive car NFTs, allowing user
 
 - React.js for the frontend UI
 - Ethereum blockchain for NFT storage and transactions
-- Web3.js/ethers.js for blockchain interaction
+- Ethers.js for blockchain interaction
 - IPFS for decentralized storage of NFT metadata and images
 - Tailwind CSS for styling
 
 ## Getting Started
 
-### Prerequisites
-
-- Node.js (v14+)
-- npm or yarn
-- MetaMask or other Ethereum wallet
-- Some ETH for transactions (can use testnet ETH)
 
 ### Installation
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/carnft-marketplace.git
-   cd carnft-marketplace
+   git clone https://github.com/Anuoluwapo25/CarDealers_Marketplace.git
+   cdCarDealers_Marketplace
    ```
 
 2. Install dependencies:
    ```bash
    npm install
-   # or
-   yarn install
    ```
 
 3. Create a `.env` file in the root directory with the following variables:
@@ -55,27 +47,30 @@ CARNFT is a blockchain-powered marketplace for exclusive car NFTs, allowing user
 
 4. Start the development server:
    ```bash
-   npm start
-   # or
-   yarn start
+   npm run dev
    ```
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-### Smart Contract Deployment
 
-1. Install Hardhat:
+## Smart Contract Deployment (Using Foundry)
+
+1. Navigate to the `contracts` directory:
    ```bash
-   npm install --save-dev hardhat
+   cd contracts
    ```
 
-2. Run the deployment script:
+2. Build the contracts:
    ```bash
-   npx hardhat run scripts/deploy.js --network <network-name>
+   forge build
    ```
 
-3. Update the contract address in your `.env` file
+3. Deploy contracts (replace `<network-url>` and `<private-key>` with your values):
+   ```bash
+   forge create --rpc-url <network-url> --private-key <your-private-key> src/NFTmarket.sol:NFTmarket
+   ```
 
+4. Update the deployed contract address in your `.env` file.
 ## Usage
 
 ### Connecting Your Wallet
@@ -123,8 +118,7 @@ Admin functions are restricted to authorized addresses.
 
 ```bash
 npm test
-# or
-yarn test
+
 ```
 
 ### Smart Contract Tests (Foundry)
